@@ -12,6 +12,8 @@ var pathNames= {
 	'c1':'#FF0000', 'c2': '#0000FF'
 };
 
+var currentBusValue='c1';
+
 var displaying={};
 
 var curr_bus;
@@ -51,21 +53,9 @@ Ext.setup({
 			}
 		});
 
-		//create tab that will toggle
-		var togglableTab = function(busValue) {
-			var tab = new Ext.form.Toggle({
-				name: 'enable',
-				label: busValue,
-				value: '0'
-			});
-			tab.addListener('change', function() {
-				displaying[busValue]=tab.getValue();
-				console.log(busValue+" is now "+ tab.getValue());
-			});
-			return tab;
-		}
 		var tapHandler = function(button, event) {
 			var busValue = button.text;
+			currentBusValue=busValue;
 			updateBus(busValue);
 		};
 		//automatically generate all bus tabs
@@ -74,7 +64,7 @@ Ext.setup({
 			for(var busValue in pathNames) {
 				tabs.push( new Ext.Button({
 					text: busValue,
-					handler: tapHandler					
+					handler: tapHandler
 				}));
 			}
 			return tabs
@@ -86,18 +76,16 @@ Ext.setup({
 			updateRoutes(busValue, true);
 			updateBuses(busValue);
 		}
-
 		var dockedItems = [{
 			xtype:'segmentedbutton',
 			items: [generateBusTabs()],
 			layout: {
-                    pack: 'center'
-               },
+				pack: 'center'
+			},
 			dock: 'bottom'
 		}];
 
-		var panel = new Ext.Panel({
-	
+		var mainPanel = new Ext.Panel({
 			fullscreen: true,
 			dockedItems:[{
 				xtype:'toolbar',
@@ -108,7 +96,9 @@ Ext.setup({
 			items:[map]
 		});
 		updateBus('c1');
-		//setInterval(busesFunc, 5000);
+		
+		var update = function(){updateBus(currentBusValue); console.log("just automatically updated")};
+		setInterval(update, 5000);
 	}
 });
 
@@ -128,23 +118,6 @@ var clearRoutes = function() {
 		var busesData = mapPaths[busValue];
 		if(busesData!=null) {
 			busesData.setOptions({strokeOpacity:0.0});
-		}
-	}
-}
-//update routes and buses
-var update = function() {
-	console.log("Start update");
-	clearMarkers();
-
-	for(var busValue in displaying) {
-		if(displaying[busValue]==1) {
-			updateRoutes(busValue,true);
-			updateBuses(busValue);
-		} else {
-			console.log("removing route "+ busValue);
-			if(mapPaths[busValue]) {
-				mapPaths[busValue].setOptions({strokeOpacity:0.0});
-			}
 		}
 	}
 }
