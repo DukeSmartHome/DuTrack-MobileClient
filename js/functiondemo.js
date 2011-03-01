@@ -25,10 +25,11 @@ Ext.setup({
 	onReady: function() {
 		// Creates the map centered on duke compus
 		map = new Ext.Map({
-			title: 'Live Bus',
+			title: 'DuTrack',
 			iconCls: 'map',
 			getLocation: false,
 			layout:'fit',
+			ui:'dark',
 			mapOptions: {
 				zoom: 14,
 				streetViewControl: false,
@@ -73,10 +74,7 @@ Ext.setup({
 			for(var busValue in pathNames) {
 				tabs.push( new Ext.Button({
 					text: busValue,
-					handler: tapHandler,
-					xtype: 'toolbar',
-					
-					
+					handler: tapHandler					
 				}));
 			}
 			return tabs
@@ -88,28 +86,9 @@ Ext.setup({
 			updateRoutes(busValue, true);
 			updateBuses(busValue);
 		}
-		/*
-		var buttonsGroup = [{
-			xtype: 'segmentedbutton',
-			allowDepress: true,
-			items: [{
-				text: 'c1',
-				handler: tapHandler,
-				pressed: true
-			}, {
-				text: 'c2',
-				handler: tapHandler
-			}, {
-				text: 'c3',
-				handler: tapHandler
-			}]
-		}];*/
 
 		var dockedItems = [{
-			xtype: 'toolbar',
-			ui: 'action',
 			xtype:'segmentedbutton',
-			flex: 1,
 			items: [generateBusTabs()],
 			layout: {
                     pack: 'center'
@@ -118,13 +97,15 @@ Ext.setup({
 		}];
 
 		var panel = new Ext.Panel({
-			id: 'toolbartxt',
-			cls: 'card',
+	
 			fullscreen: true,
-			dock: 'bottom',
-			dockedItems:dockedItems,
-			items:[map],
-			
+			dockedItems:[{
+				xtype:'toolbar',
+				items: dockedItems,
+				dock:'bottom',
+				layout:{pack:'center'}
+			}],
+			items:[map]
 		});
 		updateBus('c1');
 		//setInterval(busesFunc, 5000);
