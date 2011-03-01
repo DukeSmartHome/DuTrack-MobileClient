@@ -116,7 +116,6 @@ Ext.setup({
 		
 		
 		//setInterval(busesFunc, 5000);
-
 	}
 });
 
@@ -137,7 +136,7 @@ var update = function() {
 	for(var busValue in displaying) {
 		if(displaying[busValue]==1) {
 			updateRoutes(busValue,true);
-			//updateBuses(busValue);
+			updateBuses(busValue);
 		} else {
 			console.log("removing route "+ busValue);
 			if(mapPaths[busValue]) {
@@ -187,27 +186,32 @@ var updateRoutes = function(busValue) {
 	}
 }
 
+//return a marker for a bus
+var createMarker= function(busValue) {
+	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false});
+}
+
 //obtain data given busValue
 var updateBuses = function(busValue) {
 	console.log("updateBuses "+busValue);
 	
 	Ext.util.JSONP.request({
-		url: apiWebSite+'/routes/'+busValue+'/busLocations',
+		url: apiWebSite+'/routes/'+busValue+'/buses',
 		callbackKey: 'callback',
 		callback: function(data) {
 
 			var busArray = new Array()
-			for(var i =0; i<data.length; i++) {
+			for(var busName in data) {
 				//incoming data will have bus[0]=id, bus[1] lat, bus[2] long
-				var bus = data[i];
-				console.log(str(bus[1])+ ' ' + str(bus[2]));
-				busArray.push({
-					marker: createMarker(busValue),
-					location: new google.maps.LatLng(bus[1],bus[2])
-				});
+				var bus = data[busName];
+				console.log("loading bus"+busName);
+				console.log(String(bus[0])+ ' ' + String(bus[1]));
+				busArray.push([
+					createMarker(busValue), new google.maps.LatLng(bus[0],bus[1])
+				]);
 			}
 
-			marker[busValue]=busArray;
+			markers[busValue]=busArray;
 
 			drawUpdatedBuses(busValue);
 		}
@@ -216,12 +220,10 @@ var updateBuses = function(busValue) {
 
 //draw all the buses with the given busValue
 var drawUpdatedBuses = function(busValue) {
-	for(var bus in marker[busValue]) {
-		bus.setPosition(bus.position);
+	var list = markers[busValue];
+	for(var i = 0; i< list.length; i++) {
+		var marker =(list[i][0]).setPosition(list[i][1]);
 	}
 }
 
-//return a marker for a bus
-var createMakrer= function(busValue) {
-	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false});
-}
+
