@@ -28,6 +28,7 @@ Ext.setup({
 			title: 'Live Bus',
 			iconCls: 'map',
 			getLocation: false,
+			layout:'fit',
 			mapOptions: {
 				zoom: 14,
 				streetViewControl: false,
@@ -62,57 +63,65 @@ Ext.setup({
 			});
 			return tab;
 		}
-		//handle updateButton's action
-		var buttonHandler = function(button, event) {
-			update();
-			console.log("just updated");
-		}
+		var tapHandler = function(button, event) {
+			var busValue = button.text;
+			updateBus(busValue);
+		};
 		//automatically generate all bus tabs
 		var generateBusTabs = function() {
 			var tabs = new Array();
 			for(var busValue in pathNames) {
-				tabs.push(togglableTab(busValue));
+				tabs.push( new Ext.Button({
+					text: busValue,
+					handler: tapHandler
+				}));
 			}
 			return tabs
 		}
-		//create setting's panel
-		var busSettings = new Ext.Panel({
-			title:'settings',
-			iconCls:'settings',
-			scroll: 'vertical',
-			fullscreen:'true',
+		var updateBus= function(busValue) {
+			clearMarkers();
+			clearRoutes();
+
+			updateRoutes(busValue, true);
+			updateBuses(busValue);
+		}
+		/*
+		var buttonsGroup = [{
+			xtype: 'segmentedbutton',
+			allowDepress: true,
+			items: [{
+				text: 'c1',
+				handler: tapHandler,
+				pressed: true
+			}, {
+				text: 'c2',
+				handler: tapHandler
+			}, {
+				text: 'c3',
+				handler: tapHandler
+			}]
+		}];*/
+
+		var dockedItems = [{
+			xtype: 'toolbar',
+			ui: 'action',
+			xtype:'segmentedbutton',
+			items: [generateBusTabs()],
 			layout: {
-				type: 'vbox',
-				pack: 'center',
-				align: 'stretch'
-			},
-			defaults: {
-				xtype: 'button',
-				cls: 'demobtn'
-			},
-			items: [ generateBusTabs(), new Ext.Button({
-				text:'update',
-				title:'update',
-				handler: buttonHandler
-			})]
-		});
+                    pack: 'center'
+               },
+			dock: 'bottom'
+		}];
 
-		// Creates a tab panel with the map and the setting
-		var panel = new Ext.TabPanel({
+		var panel = new Ext.Panel({
+			id: 'toolbar',
+			cls: 'card',
+			ui:'dark',
 			fullscreen: true,
-			cardSwitchAnimation:{
-				type: 'slide',
-				cover: true
-			},
-			tabBar: {
-				dock: 'bottom',
-				layout: {
-					pack: 'center'
-				}
-			},
-			items: [map ,busSettings]
+			dockedItems: dockedItems,
+			items:[map]
 		});
-
+		updateBus('c1');
 		//setInterval(busesFunc, 5000);
 	}
 });
@@ -125,6 +134,14 @@ var clearMarkers= function() {
 			for(var i = 0; i<busesData.length; i++) {
 				busesData[i][0].setMap(null);
 			}
+		}
+	}
+}
+var clearRoutes = function() {
+	for(var busValue in pathNames) {
+		var busesData = mapPaths[busValue];
+		if(busesData!=null) {
+			busesData.setOptions({strokeOpacity:0.0});
 		}
 	}
 }
@@ -165,7 +182,7 @@ var getWayPoint = function(busValue) {
 			mapPaths[busValue] = new google.maps.Polyline({
 				path: routeArray,
 				strokeColor: pathNames[busValue],
-				strokeOpacity: 0.5,
+				strokeOpacity: 1.5,
 				strokeWeight: 3
 			})
 
@@ -180,7 +197,7 @@ var updateRoutes = function(busValue) {
 		getWayPoint(busValue);
 
 	} else {
-		mapPaths[busValue].setMap(map.map);
+		mapPaths[busValue].setOptions({strokeOpacity:1.0});
 	}
 }
 //return a marker for a bus
