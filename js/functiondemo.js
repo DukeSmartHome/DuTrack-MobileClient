@@ -73,7 +73,10 @@ Ext.setup({
 			for(var busValue in pathNames) {
 				tabs.push( new Ext.Button({
 					text: busValue,
-					handler: tapHandler
+					handler: tapHandler,
+					xtype: 'toolbar',
+					
+					
 				}));
 			}
 			return tabs
@@ -106,6 +109,7 @@ Ext.setup({
 			xtype: 'toolbar',
 			ui: 'action',
 			xtype:'segmentedbutton',
+			flex: 1,
 			items: [generateBusTabs()],
 			layout: {
                     pack: 'center'
@@ -114,12 +118,13 @@ Ext.setup({
 		}];
 
 		var panel = new Ext.Panel({
-			id: 'toolbar',
+			id: 'toolbartxt',
 			cls: 'card',
-			ui:'dark',
 			fullscreen: true,
-			dockedItems: dockedItems,
-			items:[map]
+			dock: 'bottom',
+			dockedItems:dockedItems,
+			items:[map],
+			
 		});
 		updateBus('c1');
 		//setInterval(busesFunc, 5000);
