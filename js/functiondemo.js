@@ -9,7 +9,7 @@ var mapPaths = {};
 var markers = {};
 
 var pathNames= {
-'c1':'#FF0000', 'c2': '#0000FF'
+	'c1':'#FF0000', 'c2': '#0000FF'
 };
 
 var displaying={};
@@ -67,11 +67,10 @@ Ext.setup({
 			update();
 			console.log("just updated");
 		}
-
 		//automatically generate all bus tabs
-		var generateBusTabs = function(){
+		var generateBusTabs = function() {
 			var tabs = new Array();
-			for(var busValue in pathNames){
+			for(var busValue in pathNames) {
 				tabs.push(togglableTab(busValue));
 			}
 			return tabs
@@ -113,8 +112,7 @@ Ext.setup({
 			},
 			items: [map ,busSettings]
 		});
-		
-		
+
 		//setInterval(busesFunc, 5000);
 	}
 });
@@ -122,12 +120,14 @@ Ext.setup({
 //clear all bus markers
 var clearMarkers= function() {
 	for(var busValue in pathNames) {
-		for(var marker in markers[busValue]) {
-			marker.setMap(null);
+		var busesData = markers[busValue]
+		if(busesData) {
+			for(var i = 0; i<busesData.length; i++) {
+				busesData[i][0].setMap(null);
+			}
 		}
 	}
 }
-
 //update routes and buses
 var update = function() {
 	console.log("Start update");
@@ -145,7 +145,6 @@ var update = function() {
 		}
 	}
 }
-
 //get routes
 var getWayPoint = function(busValue) {
 	var waypoint;
@@ -174,7 +173,6 @@ var getWayPoint = function(busValue) {
 		}
 	});
 }
-
 //update routes
 var updateRoutes = function(busValue) {
 	if(!mapPaths[busValue]) {
@@ -185,16 +183,14 @@ var updateRoutes = function(busValue) {
 		mapPaths[busValue].setMap(map.map);
 	}
 }
-
 //return a marker for a bus
 var createMarker= function(busValue) {
 	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false});
 }
-
 //obtain data given busValue
 var updateBuses = function(busValue) {
 	console.log("updateBuses "+busValue);
-	
+
 	Ext.util.JSONP.request({
 		url: apiWebSite+'/routes/'+busValue+'/buses',
 		callbackKey: 'callback',
@@ -207,7 +203,7 @@ var updateBuses = function(busValue) {
 				console.log("loading bus"+busName);
 				console.log(String(bus[0])+ ' ' + String(bus[1]));
 				busArray.push([
-					createMarker(busValue), new google.maps.LatLng(bus[0],bus[1])
+				createMarker(busValue), new google.maps.LatLng(bus[0],bus[1])
 				]);
 			}
 
@@ -217,7 +213,6 @@ var updateBuses = function(busValue) {
 		}
 	});
 }
-
 //draw all the buses with the given busValue
 var drawUpdatedBuses = function(busValue) {
 	var list = markers[busValue];
@@ -225,5 +220,4 @@ var drawUpdatedBuses = function(busValue) {
 		var marker =(list[i][0]).setPosition(list[i][1]);
 	}
 }
-
 
