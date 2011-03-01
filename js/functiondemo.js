@@ -98,7 +98,7 @@ Ext.setup({
 		updateBus('c1');
 		
 		var update = function(){updateBus(currentBusValue); console.log("just automatically updated")};
-		setInterval(update, 5000);
+		setInterval(update, 3000);
 	}
 });
 
@@ -161,7 +161,7 @@ var updateRoutes = function(busValue) {
 }
 //return a marker for a bus
 var createMarker= function(busValue) {
-	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false});
+	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false,icon: "bg.png"});
 }
 //obtain data given busValue
 var updateBuses = function(busValue) {
