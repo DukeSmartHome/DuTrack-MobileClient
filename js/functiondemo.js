@@ -8,9 +8,9 @@ var mapPaths = {};
 // Markers for buses
 var markers = {};
 
-var pathNames= [
-'c1', 'c2', 'c3'
-];
+var pathNames= {
+'c1':'#FF0000', 'c2': '#0000FF'
+};
 
 var displaying={};
 
@@ -23,11 +23,7 @@ Ext.setup({
 	phoneStartupScreen: 'phone_startup.png',
 	glossOnIcon: true,
 	onReady: function() {
-
-		//               Create UI Elements
-		///////////////////////////////////////////////////////////////////////
-
-		// Creates the map
+		// Creates the map centered on duke compus
 		map = new Ext.Map({
 			title: 'Live Bus',
 			iconCls: 'map',
@@ -53,6 +49,7 @@ Ext.setup({
 			}
 		});
 
+		//create tab that will toggle
 		var togglableTab = function(busValue) {
 			var tab = new Ext.form.Toggle({
 				name: 'enable',
@@ -65,20 +62,21 @@ Ext.setup({
 			});
 			return tab;
 		}
+		//handle updateButton's action
 		var buttonHandler = function(button, event) {
 			update();
 			console.log("just updated");
 		}
-		var updateButton = function() {
-			var button =new Ext.Button({
-				text:'update',
-				title:'update',
-				handler: buttonHandler
 
-			});
-
-			return button;
-		};
+		//automatically generate all bus tabs
+		var generateBusTabs = function(){
+			var tabs = new Array();
+			for(var busValue in pathNames){
+				tabs.push(togglableTab(busValue));
+			}
+			return tabs
+		}
+		//create setting's panel
 		var busSettings = new Ext.Panel({
 			title:'settings',
 			iconCls:'settings',
@@ -93,10 +91,14 @@ Ext.setup({
 				xtype: 'button',
 				cls: 'demobtn'
 			},
-			items: [ togglableTab('c1'), togglableTab('c2'),togglableTab('c3'), updateButton()]
+			items: [ generateBusTabs(), new Ext.Button({
+				text:'update',
+				title:'update',
+				handler: buttonHandler
+			})]
 		});
 
-		// Creates a tab panel with the map and the table
+		// Creates a tab panel with the map and the setting
 		var panel = new Ext.TabPanel({
 			fullscreen: true,
 			cardSwitchAnimation:{
@@ -111,15 +113,14 @@ Ext.setup({
 			},
 			items: [map ,busSettings]
 		});
-
-		//               Set Timers
-		///////////////////////////////////////////////////////////////////////
-
+		
+		
 		//setInterval(busesFunc, 5000);
 
 	}
 });
 
+//clear all bus markers
 var clearMarkers= function() {
 	for(var busValue in pathNames) {
 		for(var marker in markers[busValue]) {
@@ -127,6 +128,8 @@ var clearMarkers= function() {
 		}
 	}
 }
+
+//update routes and buses
 var update = function() {
 	console.log("Start update");
 	clearMarkers();
@@ -136,17 +139,15 @@ var update = function() {
 			updateRoutes(busValue,true);
 			//updateBuses(busValue);
 		} else {
-			if(mapPaths[busValue]){
-				mapPaths[busValue].setOptions({opacity:0.0});
+			console.log("removing route "+ busValue);
+			if(mapPaths[busValue]) {
+				mapPaths[busValue].setOptions({strokeOpacity:0.0});
 			}
 		}
 	}
 }
-var updateRoutes = function(busValue, show) {
-	console.log("updateRoute "+busValue);
-	drawWayPoint(busValue);
 
-}
+//get routes
 var getWayPoint = function(busValue) {
 	var waypoint;
 	Ext.util.JSONP.request({
@@ -156,22 +157,27 @@ var getWayPoint = function(busValue) {
 
 			var routeArray = new Array();
 			for (var i = 0; i < data.coords.length; i++) {
-				var location =data.coords[i];
-				console.log(String(location[0])+" "+String(location[1]));
-				routeArray.push(new google.maps.LatLng(location[0],location[1]));
-				mapPaths[busValue] = new google.maps.Polyline({
-					path: routeArray,
-					strokeColor: "#CC0000",
-					strokeOpacity: 1.0,
-					strokeWeight: 3
-				})
-
-				mapPaths[busValue].setMap(map.map);
+				if(data.coords[i][2]!=1) {
+					var location =data.coords[i];
+					console.log(String(location[0])+" "+String(location[1]));
+					routeArray.push(new google.maps.LatLng(location[0],location[1]));
+				}
 			}
+
+			mapPaths[busValue] = new google.maps.Polyline({
+				path: routeArray,
+				strokeColor: pathNames[busValue],
+				strokeOpacity: 0.5,
+				strokeWeight: 3
+			})
+
+			mapPaths[busValue].setMap(map.map);
 		}
 	});
 }
-var drawWayPoint = function(busValue) {
+
+//update routes
+var updateRoutes = function(busValue) {
 	if(!mapPaths[busValue]) {
 		console.log("need to retrieve waypoint for "+ busValue);
 		getWayPoint(busValue);
@@ -180,16 +186,20 @@ var drawWayPoint = function(busValue) {
 		mapPaths[busValue].setMap(map.map);
 	}
 }
+
+//obtain data given busValue
 var updateBuses = function(busValue) {
 	console.log("updateBuses "+busValue);
+	
 	Ext.util.JSONP.request({
 		url: apiWebSite+'/routes/'+busValue+'/busLocations',
 		callbackKey: 'callback',
 		callback: function(data) {
 
 			var busArray = new Array()
-			for(var bus in data) {
+			for(var i =0; i<data.length; i++) {
 				//incoming data will have bus[0]=id, bus[1] lat, bus[2] long
+				var bus = data[i];
 				console.log(str(bus[1])+ ' ' + str(bus[2]));
 				busArray.push({
 					marker: createMarker(busValue),
@@ -203,11 +213,15 @@ var updateBuses = function(busValue) {
 		}
 	});
 }
+
+//draw all the buses with the given busValue
 var drawUpdatedBuses = function(busValue) {
 	for(var bus in marker[busValue]) {
 		bus.setPosition(bus.position);
 	}
 }
+
+//return a marker for a bus
 var createMakrer= function(busValue) {
-	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false, icon: "images/bg.png"});
+	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false});
 }
