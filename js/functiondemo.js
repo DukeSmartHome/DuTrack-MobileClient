@@ -155,8 +155,8 @@ var getWayPoint = function(busValue) {
 		callback: function(data) {
 
 			var routeArray = new Array();
-			for(var point in data.coords) {
-				var location =data.coords[point];
+			for (var i = 0; i < data.coords.length; i++) {
+				var location =data.coords[i];
 				console.log(String(location[0])+" "+String(location[1]));
 				routeArray.push(new google.maps.LatLng(location[0],location[1]));
 				mapPaths[busValue] = new google.maps.Polyline({
