@@ -128,7 +128,7 @@ var getWayPoint = function(busValue) {
 	var waypoint;
 	Ext.util.JSONP.request({
 		url: API_URL+'/routes/'+busValue,
-		callbackKey: 'callback',
+		callbackKey: 'callback',		
 		callback: function(data) {
 
 			var routeArray = new Array();
@@ -163,7 +163,7 @@ var updateRoutes = function(busValue) {
 }
 //return a marker for a bus
 var createMarker= function(busValue) {
-	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false,icon: "bg.png"});
+	return new google.maps.Marker({ map: map.map, clickable: true, draggable: false,icon: "bus.png"});
 }
 //obtain data given busValue
 var updateBuses = function(busValue) {
@@ -172,6 +172,9 @@ var updateBuses = function(busValue) {
 	Ext.util.JSONP.request({
 		url: API_URL+'/routes/'+busValue+'/buses',
 		callbackKey: 'callback',
+		params: {
+    uniquify: (Math.random() + '').substr(2)
+    },
 		callback: function(data) {
 
 			var busArray = new Array()
