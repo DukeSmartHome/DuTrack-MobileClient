@@ -1,8 +1,10 @@
 // Keeps track of all stops
 var allStops;
 
-var apiWebSite = 'http://db.dutrack.com:100';
+var API_URL = 'http://api.dutrack.com';
 
+// how quickly the client should ask the server for updates
+var UPDATE_INTERVAL = 1500;
 var mapPaths = {};
 
 // Markers for buses
@@ -98,7 +100,7 @@ Ext.setup({
 		updateBus('c1');
 		
 		var update = function(){updateBus(currentBusValue); console.log("just automatically updated")};
-		setInterval(update, 3000);
+		setInterval(update, UPDATE_INTERVAL);
 	}
 });
 
@@ -125,7 +127,7 @@ var clearRoutes = function() {
 var getWayPoint = function(busValue) {
 	var waypoint;
 	Ext.util.JSONP.request({
-		url: apiWebSite+'/routes/'+busValue,
+		url: API_URL+'/routes/'+busValue,
 		callbackKey: 'callback',
 		callback: function(data) {
 
@@ -168,7 +170,7 @@ var updateBuses = function(busValue) {
 	console.log("updateBuses "+busValue);
 
 	Ext.util.JSONP.request({
-		url: apiWebSite+'/routes/'+busValue+'/buses',
+		url: API_URL+'/routes/'+busValue+'/buses',
 		callbackKey: 'callback',
 		callback: function(data) {
 
