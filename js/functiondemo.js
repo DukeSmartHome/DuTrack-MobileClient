@@ -9,8 +9,6 @@ var mapPaths = {};
 
 var UPDATE_INTERVAL_ID = null;
 // Markers for buses
-var busMarkers = {};
-var busLocations={};
 
 var pathNames= {
 	'C1': '#111a24',
@@ -24,6 +22,8 @@ var pathNames= {
 var currentBusValue='C1';
 var activeRoute;
 var activeBus;
+var busMarkers = {};
+var busLocations={};
 
 var displaying={};
 
@@ -84,10 +84,7 @@ Ext.setup({
 			return tabs;
 		}
 		var updateBus= function(busValue) {
-			clearMarkers();
-			clearRoutes();
-
-			updateRoutes(busValue, true);
+			updateRoutes(busValue);
 			updateBuses(busValue);
 		}
 		var dockedItems = [{
@@ -109,7 +106,6 @@ Ext.setup({
 			}],
 			items:[map]
 		});
-		//updateBus('c1');
 
 		var update = function() {
 			updateBus(currentBusValue);
@@ -117,7 +113,6 @@ Ext.setup({
 		};
 	}
 });
-
 
 //get routes
 var getWayPoint = function(busValue) {
@@ -144,12 +139,12 @@ var getWayPoint = function(busValue) {
 			})
 
 			mapPaths[busValue].setMap(map.map);
-			
+
 			displayRoute(busValue);
 		}
 	});
 }
-//update routes
+//update routes accordingly
 var updateRoutes = function(busValue) {
 
 	if(!mapPaths[busValue]) {
@@ -159,22 +154,15 @@ var updateRoutes = function(busValue) {
 		displayRoute(busValue);
 	}
 }
-var displayRoute= function(busValue){
-	if(activeRoute!=busValue){
+//display route of given busValue
+var displayRoute= function(busValue) {
+	if(!activeRoute) {
+		mapPaths[busValue].setOptions({strokeOpacity:1.0});
+	} else if(activeRoute!=busValue) {
 		mapPaths[activeRoute].setOptions({strokeOpacity:0.0});
 		mapPaths[busValue].setOptions({strokeOpacity:1.0});
-		activeRoute=busValue;
 	}
-
-}
-//return a marker for a bus
-var createMarker= function(busValue) {
-	return new google.maps.Marker({
-		map: map.map,
-		clickable: true,
-		draggable: false,
-		icon: "bus.png"
-	});
+	activeRoute=busValue;
 }
 //obtain data given busValue
 var updateBuses = function(busValue) {
@@ -188,13 +176,13 @@ var updateBuses = function(busValue) {
 		},
 		callback: function(data) {
 
-			var busRoutes;
+			var busRoutes={};
 			for(var busName in data) {
 				//incoming data will have bus[0]=id, bus[1]=lat, bus[2]=long
 				var bus = data[busName];
 				console.log("loading bus"+busName);
 				console.log(String(bus[0])+ ' ' + String(bus[1]));
-				busRoutes[busName]=new google.maps.LatLng(bus[0],bus[1]);
+				busRoutes[busName]= new google.maps.LatLng(bus[0],bus[1]);
 			}
 
 			busLocations[busValue]=busRoutes;
@@ -203,15 +191,67 @@ var updateBuses = function(busValue) {
 		}
 	});
 }
-
 //draw all the buses with the given busValue
 var drawUpdatedMarkers = function(busValue) {
-	var currentMarkers = busMarkers[busValue];
+
 	var newLocations = busLocations[busValue];
-	
-	var list = markers[busValue];
-	for(var i = 0; i< list.length; i++) {
-		var marker =(list[i][0]).setPosition(list[i][1]);
+
+	if(!busMarkers[busValue]) {
+		busMarkers[busValue]=initializeMarkers(newLocations);
+	}
+
+	if(busMarkers[busValue]=='invalid') {
+		hideMarkers(activeBus);
+	} else {
+		updateBusLocations(busValue);
+		displayMarkers(busValue);
+	}
+	activeBus = currentBusValue;
+
+}
+//update the bus locations of the bus with the given busValue
+var updateBusLocations = function(busValue) {
+	var markers = busMarkers[busValue];
+	var newLocations = busLocations[busValue];
+	for(bus in markers) {
+		markers[bus].setPosition(newLocations[bus]);
+	}
+}
+//initialize markers if no markers have been created yet
+var initializeMarkers = function(locations) {
+	var markers={};
+	for(busName in locations) {
+		markers[busName]=createMarker(locations[busName]);
+	}
+	return markers;
+}
+//return a marker for a bus
+var createMarker= function(location) {
+	return new google.maps.Marker({
+		map: map.map,
+		clickable: true,
+		draggable: false,
+		icon: "bus.png",
+		position: location
+	});
+}
+
+//display markers of given busValue if not currently active and hide
+//previously active markers.
+var displayMarkers = function (busValue) {
+	if(activeBus!=currentBusValue) {
+		hideMarkers(activeBus);
+	}
+	var markers = busMarkers[currentBusValue];
+	for(busName in markers) {
+		markers[busName].setVisible(true);
 	}
 }
 
+//hide all markers given busValue
+var hideMarkers = function(busValue) {
+	var markers = busMarkers[busValue];
+	for(busName in markers) {
+		markers[busName].setVisible(false);
+	}
+}
